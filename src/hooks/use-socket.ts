@@ -9,6 +9,7 @@ interface OptionType {
   onDisconnect?: (socket: Socket) => void
   transport?: Transport
   header?: Record<string, string>
+  query?: Record<string, string>
   onEvents?: [
     {
       name: string
@@ -30,7 +31,6 @@ const useSocket = (url: string, options?: OptionType) => {
     transport: 'N/A'
   })
   const socketRef = useRef<Socket | null>(null)
-  const optionsRef = useRef<OptionType | undefined>(options)
   const pathname = usePathname()
 
   const onConnect = () => {
@@ -39,8 +39,7 @@ const useSocket = (url: string, options?: OptionType) => {
         isConnected: true,
         transport: socketRef.current.io.engine.transport.name
       })
-      if (optionsRef.current?.onConnect)
-        optionsRef.current.onConnect(socketRef.current)
+      if (options?.onConnect) options.onConnect(socketRef.current)
     }
   }
 
@@ -55,20 +54,20 @@ const useSocket = (url: string, options?: OptionType) => {
 
   const connect = () => {
     if (socketRef.current?.connected) throw new Error('socket already connect')
-    const transport = optionsRef.current?.transport ?? DEFAULT_TRANSPORT
-    const wsUrl = url + (optionsRef.current?.path ?? pathname)
+    const transport = options?.transport ?? DEFAULT_TRANSPORT
+    const header = options?.header ? options.header : {}
+    const query = options?.query ? options.query : {}
+    const wsUrl = url + (options?.path ?? pathname)
     const socket = io(wsUrl, {
-      extraHeaders: optionsRef.current?.header ? optionsRef.current.header : {},
+      extraHeaders: header,
+      query,
       transports: [transport]
     })
     socketRef.current = socket
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
-    if (
-      optionsRef.current?.onEvents &&
-      Array.isArray(optionsRef.current?.onEvents)
-    ) {
-      for (const tEvents of optionsRef.current.onEvents) {
+    if (options?.onEvents && Array.isArray(options?.onEvents)) {
+      for (const tEvents of options.onEvents) {
         socket.on(tEvents.name, tEvents.event)
       }
     }
@@ -76,17 +75,15 @@ const useSocket = (url: string, options?: OptionType) => {
 
   const disconnect = () => {
     if (socketRef.current?.connected) {
-      if (optionsRef.current?.onDisconnect)
-        optionsRef.current.onDisconnect(socketRef.current)
+      if (options?.onDisconnect) options.onDisconnect(socketRef.current)
       socketRef.current?.disconnect()
     }
   }
 
   useEffect(() => {
     const tSocket = socketRef
-    const toptionsRef = optionsRef
     return () => {
-      if (tSocket.current?.connected && toptionsRef.current) {
+      if (tSocket.current?.connected) {
         disconnect()
       }
     }

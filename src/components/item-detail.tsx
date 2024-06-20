@@ -26,16 +26,17 @@ const ItemDetail = ({ children }: Props) => {
 
   const { connect } = useSocket(SOCKET_URL, {
     path: '/room',
-    header: { userKey },
+    header: { room: roomNo, userKey },
     transport: 'websocket',
+    query: {
+      room: roomNo
+    },
     onConnect: (socket) => {
-      console.log(userKey)
       if (userKey) {
         socket.emit('addViewer', { room: roomNo, userKey })
       }
     },
     onDisconnect: (socket) => {
-      console.log(userKey)
       if (userKey) {
         socket.emit('leaveViewer', { room: roomNo, userKey })
       }
