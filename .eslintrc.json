@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "standard",
+    "next/core-web-vitals",
+    "plugin:prettier/recommended",
+    "plugin:tailwindcss/recommended"
+  ],
+  "rules": {
+    "no-prototype-builtins": "off",
+    "prettier/prettier": "warn",
+    "tailwindcss/classnames-order": "off",
+    "spaced-comment": "off"
+  }
+}
