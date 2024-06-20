@@ -42,7 +42,7 @@ const ItemDetail = ({ children }: Props) => {
     },
     onEvents: [
       {
-        name: 'viewer',
+        name: 'getCount',
         event: (count) => {
           setViewer(count)
         }
