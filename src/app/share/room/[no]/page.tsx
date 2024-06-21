@@ -1,10 +1,10 @@
 import React from 'react'
-import ItemDetail from '@/components/item-detail'
+import ItemShareDetail from '@/components/item-share-detail'
 
 const ReservationPage = () => {
   return (
     <>
-      <ItemDetail></ItemDetail>
+      <ItemShareDetail></ItemShareDetail>
     </>
   )
 }

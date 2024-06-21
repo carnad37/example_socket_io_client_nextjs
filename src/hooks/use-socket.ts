@@ -10,6 +10,7 @@ interface OptionType {
   transport?: Transport
   header?: Record<string, string>
   query?: Record<string, string>
+  share?: boolean
   onEvents?: [
     {
       name: string
