@@ -36,11 +36,6 @@ const ItemDetail = ({ children }: Props) => {
         socket.emit('addViewer', { room: roomNo, userKey })
       }
     },
-    onDisconnect: (socket) => {
-      if (userKey) {
-        socket.emit('leaveViewer', { room: roomNo, userKey })
-      }
-    },
     onEvents: [
       {
         name: 'getCount',
