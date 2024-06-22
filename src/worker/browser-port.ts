@@ -8,7 +8,11 @@ export class BrowserPort {
   }
 
   isAlive(): boolean {
-    return !!this.weakRef.deref()
+    const isAlive = !!this.weakRef.deref()
+    if (!isAlive) {
+      this.close()
+    }
+    return isAlive
   }
 
   postMessage(message: unknown): void {

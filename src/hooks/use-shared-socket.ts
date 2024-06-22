@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { WsWorkerContextType, WsWorkerMessageType } from '@/types/common-type'
+import {
+  WsWorkerClientMessageType,
+  WsWorkerContextType,
+  WsWorkerMessageSeverType,
+  WsWorkerMessageType
+} from '@/types/common-type'
 
 type Transport = 'polling' | 'websocket'
 interface OptionType {
@@ -28,7 +33,7 @@ interface SocketInfo {
 
 const DEFAULT_TRANSPORT: Transport = 'websocket'
 
-const useSocket = (url: string, options?: OptionType) => {
+const useSharedSocket = (url: string, options?: OptionType) => {
   const [socketInfo, setSocketInfo] = useState<SocketInfo>({
     isConnected: false,
     transport: 'N/A'
@@ -37,15 +42,24 @@ const useSocket = (url: string, options?: OptionType) => {
   const initRef = useRef(false)
   const pathname = usePathname()
 
+  const emitCover = (data: WsWorkerClientMessageType) => {
+    if (workerRef.current) {
+      workerRef.current.port.postMessage({
+        uniqueName: pathname,
+        clientMessage: data
+      } as WsWorkerMessageSeverType)
+    }
+  }
+
   const emit = (eventName: string, args: string | Record<string, string>) => {
     const message = {
-      messageData: {
+      eventData: {
         name: eventName,
         value: args
       }
     } as WsWorkerMessageType
     if (workerRef.current) {
-      workerRef.current?.port.postMessage(message)
+      emitCover(message)
     }
   }
 
@@ -69,7 +83,9 @@ const useSocket = (url: string, options?: OptionType) => {
 
     if (typeof window !== 'undefined' && window?.SharedWorker) {
       const worker = new SharedWorker(
-        new URL('@/worker/ws-store.ts', import.meta.url)
+        new URL('@/worker/ws-store.ts', import.meta.url), {
+          name: 'toy-socket-example'
+        }
       )
       worker.port.onmessage = (e: MessageEvent<WsWorkerMessageType>) => {
         const responseData = e.data?.responseData
@@ -83,9 +99,9 @@ const useSocket = (url: string, options?: OptionType) => {
           }
         }
 
-        if (e.data?.messageData) {
+        if (e.data?.eventData) {
           // 메세지처리
-          const messageData = e.data.messageData
+          const messageData = e.data.eventData
           for (const tEvent of events) {
             if (messageData.name === tEvent.name) {
               tEvent.event(messageData.value as string)
@@ -104,14 +120,15 @@ const useSocket = (url: string, options?: OptionType) => {
             }))
           }
         }
-        console.log('Caller Received:', e.data)
       }
       worker.port.start()
-      worker.port.postMessage({
+      workerRef.current = worker
+
+      // 초기화 emit
+      emitCover({
         initData,
         contextData
-      } as WsWorkerMessageType)
-      workerRef.current = worker
+      })
     }
   }
 
@@ -130,4 +147,4 @@ const useSocket = (url: string, options?: OptionType) => {
   }
 }
 
-export default useSocket
+export default useSharedSocket

@@ -5,7 +5,7 @@ interface RoomDataType {
   imageUrl: string
 }
 
-export const SOCKET_URL = '####'
+export const SOCKET_URL = 'localhost:4000'
 export const RESERVATIONS: Record<string, RoomDataType> = {
   '1': {
     title: 'hotel1',
